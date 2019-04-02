@@ -52,15 +52,35 @@ Function Get-AzureIDValue
     return $returnValue
 }
 
-
-#$LoginUserName = "hockey@michaelrasmussenlive.onmicrosoft.com"
-#$PathToSecureStringPassword = "C:\source\mysecurestring.txt"
-#$ResourceGroupName = "VM-RG"
-
-#check parameters
 if($RunPasswordPrompt)
 {
-    read-host -assecurestring | convertfrom-securestring | out-file $SecurePasswordLocation # C:\source\mysecurestring.txt
+    Read-host "Enter your password" -assecurestring | convertfrom-securestring | out-file $SecurePasswordLocation
+}
+if(!(Test-Path -Path $SecurePasswordLocation))
+{
+    $enterPassword = Read-Host -Prompt "There isn't a password file in the location you specified ($SecurePasswordLocation).  Do you want to enter a password now?"
+    if($enterPassword)
+    {
+        Read-host "Enter your password" -assecurestring | convertfrom-securestring | out-file $SecurePasswordLocation
+    }
+}
+
+$password = Get-Content $SecurePasswordLocation | ConvertTo-SecureString
+$cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $LoginName, $password
+try 
+{
+    $subscription = Connect-AzureRmAccount -Credential $cred 
+    if(!($subscription))
+    {
+        # error logging into account, exit
+        Write-Host "Could not log into account, exiting"
+        exit
+    }
+}
+catch 
+{
+    Write-Host "Could not log into account, exiting"
+    exit   
 }
 
 
