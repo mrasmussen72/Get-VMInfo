@@ -1,8 +1,15 @@
-#Script Parameters
-#LoginUserName
-#PasswordLocation
-#DoYouWantToRunpasswordPrompt
-#IgnoreDetachedNics
+# Get-VMInfo
+# This script takes 4 parameters and returns basic information about the Azure virtual machines associated with the login
+# you provide.  This script is meant as an example of how you could connect to Azure and run PowerShell.
+#
+# Parameter $LoginName:  This is the username you would use to log into your Azure account
+# Parameter $SecurePasswordLocation: This is the path to a text file that will contain your encrypted password.  this parameter expects
+# the full path to the file, for example, c:\Source\Password.txt, or a relative path
+# Parameter $RunPasswordPrompt if this is set to true, the user will be prompted to enter their password.  This password will be saved
+# in the location you enter for $SecurePasswordLocation.
+# Parameter $IgnoreDetachedNics: This parameter will NOT output the detached nics you will only get VM information
+# Author: Michael Rasmussen
+# Version: 1.0.0.0
 
 param(
     [string] $LoginName = "",
@@ -156,32 +163,27 @@ foreach($nic in $nics)
             $VMList.Add($VmInfo) | Out-Null
         }
     }
-
-    #$nicNameValue[0].
-    #$converted = ConvertFrom-Json -InputObject $stuff
-    #$privateIP = $nicNameValue | Select-Object -Property PrivateIPAddress, PrivateIPAllocationMethod
-    #$privateIP
 }
 
+
+"`r`n"
+"VMs********************`r`n"
 foreach($vm in $VmList)
 {
-    $vm.VMName
-    $vm.NICName
-    $vm.PrivateIP
+    "VM Name: `t" + $vm.VMName
+    "NIC Name: `t" + $vm.NICName
+    "VM Private IP: `t" + $vm.PrivateIP
     "`r`n"
 }
 
-foreach($thing in $DetachedNics)
+if(!($IgnoreDetatchedNics))
 {
-    $thing
-   
+    "Disconnected NICs*******`r`n"
+    foreach($dNic in $DetachedNics)
+    {
+        "Nic name: `t" + $dNic
+    
+    }
 }
-
-
-#Get-AzureRmNetworkInterface -ResourceGroupName VM-RG | ForEach { $Interface = $_.Name; $IPs = $_ | Get-AzureRmNetworkInterfaceIpConfig | Select PrivateIPAddress; Write-Host $Interface $IPs.PrivateIPAddress }
-
-#$things = Get-AzureRmPublicIpAddress -ResourceGroupName "VM-RG" -Name "MS-DC-ip"
-
-#Get-AzureRmVM -ResourceGroupName 'VM-RG' -Name 'MS-DC-1' | Get-AzureRmPublicIpAddress
 "`r`n"
 
