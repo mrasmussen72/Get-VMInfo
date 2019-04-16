@@ -15,9 +15,10 @@
 
 param(
     # Account to use to get info.  Must have Read access on the objects referenced
-    [string] $LoginName = "hockey@michaelrasmussenlive.onmicrosoft.com",
+    [string] $LoginName = "",
+    #[string] $LoginName = "mirasmus@mcsinternalTrials.onmicrosoft.com",
     # text file contains encrypted password
-    [string] $SecurePasswordLocation = "c:\Source\mysecurestring.txt",
+    [string] $SecurePasswordLocation = "",
     # if the encrypted text file is not present on your device, set this to true to create it
     [bool] $RunPasswordPrompt = $false,
     # can list nics that are not attached to a VM
@@ -144,36 +145,67 @@ Function Get-AzureIDValue
     return $returnValue
 }
 
-#logging in, either promot for info or use text file
-#region "Login"
-if($RunPasswordPrompt)
+function Login-Azure
 {
-    Read-host "Enter your password" -assecurestring | convertfrom-securestring | out-file $SecurePasswordLocation
-}
-if(!(Test-Path -Path $SecurePasswordLocation))
-{
-    $enterPassword = Read-Host -Prompt "There isn't a password file in the location you specified ($SecurePasswordLocation).  Do you want to enter a password now?"
-    if($enterPassword)
+    [cmdletbinding()]
+    Param
+    (
+        [bool]$RunPasswordPrompt,
+        [string]$SecurePasswordLocation,
+        [string]$LoginName
+    )
+
+
+    if($RunPasswordPrompt)
     {
         Read-host "Enter your password" -assecurestring | convertfrom-securestring | out-file $SecurePasswordLocation
     }
-}
-$password = Get-Content $SecurePasswordLocation | ConvertTo-SecureString
-$cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $LoginName, $password
-try 
-{
-    $subscription = Connect-AzureRmAccount -Credential $cred 
-    if(!($subscription))
+    if(!(Test-Path -Path $SecurePasswordLocation))
     {
-        # error logging into account, exit
-        Write-Host "Could not log into account, exiting"
-        exit
+        $enterPassword = Read-Host -Prompt "There isn't a password file in the location you specified ($SecurePasswordLocation).  Do you want to enter a password now?"
+        if($enterPassword)
+        {
+            Read-host "Enter your password" -assecurestring | convertfrom-securestring | out-file $SecurePasswordLocation
+        }
     }
+    $password = Get-Content $SecurePasswordLocation | ConvertTo-SecureString
+    $cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $LoginName, $password
+    $success = $false
+    try 
+    {
+        $subscription = Connect-AzureRmAccount -Credential $cred 
+        if(!($subscription))
+        {
+            # error logging into account, exit
+            #Write-Host "Could not log into account, exiting"
+            $success = $false
+            throw "Failed to login, exiting..."
+            #exit
+        }
+        else 
+        {
+            $success = $true      
+        }
+    }
+    catch 
+    {
+        #Write-Host "Could not log into account, exiting"
+        $success = $false
+        throw "Failed to login, exiting..."
+        #exit   
+    }
+    return $success
 }
-catch 
+
+#logging in, either promot for info or use text file
+#region "Login"
+if(Login-Azure -RunPasswordPrompt $true -SecurePasswordLocation "C:\Source\SecureString.txt" -LoginName "hockey@michaelrasmussenlive.onmicrosoft.com")
 {
-    Write-Host "Could not log into account, exiting"
-    exit   
+    #successful
+}
+else 
+{
+    #login failed    
 }
 
 
@@ -212,6 +244,7 @@ foreach($nic in $nics)
             PublicIPAllocationMethod = ""
             ResourceGroup = ""
             VMHostName = ""
+            $PublicIpAddress = ""
         }
             #maybe test IPConfiguration for null
             $PublicIp.Name = Get-AzureIDValue -Name "publicIPAddresses" -IDPayload $config[0].PublicIpAddress.Id     
@@ -221,6 +254,7 @@ foreach($nic in $nics)
             $PublicIp.PublicIPVersion = $pubIp.PublicIpAddressVersion
             $PublicIp.ResourceGroup = $pubIp.ResourceGroupName
             $PublicIp.VMHostName = $localVMName
+            $PublicIp.PublicIpAddress = $pubIp.IpAddress
             foreach($ip in $PublicIPList)
             {
                 if($ip.name.Equals($pubIp.Name))
