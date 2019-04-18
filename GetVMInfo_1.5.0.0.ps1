@@ -28,7 +28,7 @@ function AzureLogin
         
         if(!($SecurePasswordLocation -match '(\w)[.](\w)') )
         {
-            write-host "Encrypted password file ends in a directory, this needs to end in a filename.  Exiting..."
+            write-host "Encrypted password file either ends in a directory (should be a filename) or is in an incorrect format.  Exiting..."
             return false # could make success false
         }
         if($RunPasswordPrompt)
@@ -298,7 +298,7 @@ try
         $VMs = Get-AzVM
 
 
-        #after the below call have a list of custom VM objects with a Nics collection which have IP configurations
+        #after the below call have a list of custom VM objects with a Nics collection which has IP configurations
         $VMInfo = PopulateVmList -VMList $VMs -NICList $Nics # Adds VMName data to the object
         foreach($vm in $VMInfo)
         {
@@ -317,7 +317,6 @@ try
             "Type:" +           $vm.Type
             "Version:" +        $vm.Version
             "VMEnabled:" +      $vm.VMEnabled
-            "VMName:" +         $vm.VMName
             "VMSize:" +         $vm.VMSize
         }
         if(!($IgnoreDetatchedNics))
