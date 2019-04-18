@@ -1,10 +1,3 @@
-
-$VMList =           New-Object System.Collections.ArrayList
-$DetachedNics =     New-Object System.Collections.ArrayList
-$PublicIPList =     New-Object System.Collections.ArrayList
-
-
-
 #region Functions - Add your own functions here.  Leave AzureLogin as-is
 ####Functions#############################################################
 function AzureLogin
@@ -276,8 +269,8 @@ function PopulateVmList
 
 ####Begin Code - enter your code in the if statement below
 #Variables - Add your values for the variables here, you can't leave the values blank
-[string]    $LoginName =                   ""      #Azure username, something@something.onmicrosoft.com 
-[string]    $SecurePasswordLocation =      ""      #Path and filename for the secure password file c:\Whatever\securePassword.txt
+[string]    $LoginName =                   "hockey@michaelrasmussenlive.onmicrosoft.com"      #Azure username, something@something.onmicrosoft.com 
+[string]    $SecurePasswordLocation =      "c:\source\pas.txt"      #Path and filename for the secure password file c:\Whatever\securePassword.txt
 [bool]      $RunPasswordPrompt =           $true   #Uses Read-Host to prompt the user at the command prompt to enter password.  this will create the text file in $SecurePasswordLocation.
 [bool]      $AzureForGovernment =          $false  #set to $true if running cmdlets against Microsoft azure for government
 
