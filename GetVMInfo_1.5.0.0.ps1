@@ -21,7 +21,7 @@ function AzureLogin
         
         if(!($SecurePasswordLocation -match '(\w)[.](\w)') )
         {
-            write-host "Encrypted password file either ends in a directory (should be a filename) or is in an incorrect format.  Exiting..."
+            write-host "Encrypted password file ends in a directory, this needs to end in a filename.  Exiting..."
             return false # could make success false
         }
         if($RunPasswordPrompt)
@@ -47,40 +47,29 @@ function AzureLogin
             $cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $LoginName, $password 
             $success = $true
         }
-        catch 
-        {
-            $success = $false
-        }
-
-
+        catch {$success = $false}
         try 
         {
             if($success)
             {
                 if($AzureForGov){Connect-AzAccount -Credential $cred -EnvironmentName AzureUSGovernment | Out-Null}
                 else{Connect-AzAccount -Credential $cred | Out-Null}
-                $DoesUserHaveAccess = Get-AzSubscription 
-                if(!($DoesUserHaveAccess))
+                $context = Get-AzContext
+                if($context.Subscription.Name){$success = $true}
+                else{$success = $false}
+                
+                if(!($success))
                 {
-                    # error logging into account or user doesn't have subscription rights, exit
-                    $success = $false
-                    throw "Failed to login, exiting..."
-                    #exit
+                  # error logging into account or user doesn't have subscription rights, exit
+                  $success = $false
+                  throw "Failed to login, exiting..."
+                  #exit
                 }
-                else{$success = $true}  
             }
         }
-        catch 
-        {
-            #$_.Exception.Message
-            $success = $false 
-        } 
+        catch{$success = $false} 
     }
-    catch 
-    {
-        $_.Exception.Message | Out-Null
-        $success = $false    
-    }
+    catch {$success = $false}
     return $success
 }
 
@@ -269,8 +258,8 @@ function PopulateVmList
 
 ####Begin Code - enter your code in the if statement below
 #Variables - Add your values for the variables here, you can't leave the values blank
-[string]    $LoginName =                   "hockey@michaelrasmussenlive.onmicrosoft.com"      #Azure username, something@something.onmicrosoft.com 
-[string]    $SecurePasswordLocation =      "c:\source\pas.txt"      #Path and filename for the secure password file c:\Whatever\securePassword.txt
+[string]    $LoginName =                   ""      #Azure username, something@something.onmicrosoft.com 
+[string]    $SecurePasswordLocation =      ""      #Path and filename for the secure password file c:\Whatever\securePassword.txt
 [bool]      $RunPasswordPrompt =           $true   #Uses Read-Host to prompt the user at the command prompt to enter password.  this will create the text file in $SecurePasswordLocation.
 [bool]      $AzureForGovernment =          $false  #set to $true if running cmdlets against Microsoft azure for government
 
